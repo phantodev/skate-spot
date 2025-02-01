@@ -1,74 +1,267 @@
-import { Image, StyleSheet, Platform } from 'react-native';
-
-import { HelloWave } from '@/components/HelloWave';
-import ParallaxScrollView from '@/components/ParallaxScrollView';
-import { ThemedText } from '@/components/ThemedText';
-import { ThemedView } from '@/components/ThemedView';
+import {
+	Pressable,
+	StyleSheet,
+	Text,
+	View,
+	Modal,
+	ScrollView,
+	TextInput,
+	ActivityIndicator,
+	SafeAreaView,
+} from "react-native";
+import LottieView from "lottie-react-native";
+import { useRouter } from "expo-router";
+import FontAwesome from "@expo/vector-icons/FontAwesome";
+import { useState } from "react";
+import { SafeAreaProvider } from "react-native-safe-area-context";
 
 export default function HomeScreen() {
-  return (
-    <ParallaxScrollView
-      headerBackgroundColor={{ light: '#A1CEDC', dark: '#1D3D47' }}
-      headerImage={
-        <Image
-          source={require('@/assets/images/partial-react-logo.png')}
-          style={styles.reactLogo}
-        />
-      }>
-      <ThemedView style={styles.titleContainer}>
-        <ThemedText type="title">Welcome!</ThemedText>
-        <HelloWave />
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 1: Try it</ThemedText>
-        <ThemedText>
-          Edit <ThemedText type="defaultSemiBold">app/(tabs)/index.tsx</ThemedText> to see changes.
-          Press{' '}
-          <ThemedText type="defaultSemiBold">
-            {Platform.select({
-              ios: 'cmd + d',
-              android: 'cmd + m',
-              web: 'F12'
-            })}
-          </ThemedText>{' '}
-          to open developer tools.
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 2: Explore</ThemedText>
-        <ThemedText>
-          Tap the Explore tab to learn more about what's included in this starter app.
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 3: Get a fresh start</ThemedText>
-        <ThemedText>
-          When you're ready, run{' '}
-          <ThemedText type="defaultSemiBold">npm run reset-project</ThemedText> to get a fresh{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> directory. This will move the current{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> to{' '}
-          <ThemedText type="defaultSemiBold">app-example</ThemedText>.
-        </ThemedText>
-      </ThemedView>
-    </ParallaxScrollView>
-  );
+	const router = useRouter();
+	const [modalVisible, setModalVisible] = useState(false);
+	const [spotName, setSpotName] = useState("");
+	const [description, setDescription] = useState("");
+	const [address, setAddress] = useState("");
+	const [neighborhood, setNeighborhood] = useState("");
+	const [city, setCity] = useState("");
+	const [state, setState] = useState("");
+	const [zipCode, setZipCode] = useState("");
+	const [status, setStatus] = useState<
+		"idle" | "loading" | "success" | "error"
+	>("idle");
+
+	async function handleLogout() {
+		router.replace("/");
+	}
+
+	return (
+		<View style={styles.container}>
+			<Text style={styles.title}>Seja bem-vindo(a)!</Text>
+			<Text style={styles.text}>
+				Você ainda não possui spots cadastrados. Aperte no botão abaixo para
+				cadastrar.
+			</Text>
+			<LottieView
+				style={{ width: 300, height: 300 }}
+				source={require("../../assets/skate.json")}
+				autoPlay
+				loop
+			/>
+			<Pressable style={styles.addButton} onPress={() => setModalVisible(true)}>
+				<Text>Cadastrar spot</Text>
+			</Pressable>
+			<Modal
+				animationType="slide"
+				transparent={true}
+				visible={modalVisible}
+				onRequestClose={() => {
+					setModalVisible(!modalVisible);
+				}}
+			>
+				<View style={styles.centeredView}>
+					<View style={styles.modalView}>
+						<View style={styles.modalHeader}>
+							<Text style={styles.modalTitle}>Cadastrar Spot</Text>
+							<Pressable onPress={() => setModalVisible(!modalVisible)}>
+								<Text>
+									<FontAwesome name="close" size={24} color="white" />
+								</Text>
+							</Pressable>
+						</View>
+						<ScrollView style={styles.formContainer}>
+							<View style={styles.inputContainer}>
+								<Text style={styles.label}>Nome do Spot</Text>
+								<TextInput
+									style={styles.input}
+									value={spotName}
+									onChangeText={setSpotName}
+									placeholder="Ex: Pista Municipal"
+									placeholderTextColor="#666"
+								/>
+							</View>
+
+							<View style={styles.inputContainer}>
+								<Text style={styles.label}>Descrição</Text>
+								<TextInput
+									style={[styles.input, styles.textArea]}
+									value={description}
+									onChangeText={setDescription}
+									placeholder="Descreva o spot..."
+									placeholderTextColor="#666"
+									multiline
+									numberOfLines={4}
+								/>
+							</View>
+
+							<View style={styles.inputContainer}>
+								<Text style={styles.label}>CEP</Text>
+								<TextInput
+									style={styles.input}
+									value={zipCode}
+									onChangeText={setZipCode}
+									placeholder="CEP"
+									placeholderTextColor="#666"
+								/>
+							</View>
+
+							<View style={styles.inputContainer}>
+								<Text style={styles.label}>Endereço</Text>
+								<TextInput
+									style={styles.input}
+									value={address}
+									onChangeText={setAddress}
+									placeholder="Rua, número"
+									placeholderTextColor="#666"
+								/>
+							</View>
+
+							<View style={styles.inputContainer}>
+								<Text style={styles.label}>Bairro</Text>
+								<TextInput
+									style={styles.input}
+									value={neighborhood}
+									onChangeText={setNeighborhood}
+									placeholder="Bairro"
+									placeholderTextColor="#666"
+								/>
+							</View>
+
+							<View style={styles.inputContainer}>
+								<Text style={styles.label}>Cidade</Text>
+								<TextInput
+									style={styles.input}
+									value={city}
+									onChangeText={setCity}
+									placeholder="Cidade"
+									placeholderTextColor="#666"
+								/>
+							</View>
+
+							<View style={styles.inputContainer}>
+								<Text style={styles.label}>Estado</Text>
+								<TextInput
+									style={styles.input}
+									value={state}
+									onChangeText={setState}
+									placeholder="Estado"
+									placeholderTextColor="#666"
+								/>
+							</View>
+
+							<Pressable
+								style={[styles.addButton, styles.submitButton]}
+								onPress={() => {}}
+								disabled={status === "loading"}
+							>
+								{status === "loading" ? (
+									<ActivityIndicator color="#000" />
+								) : (
+									<Text style={styles.buttonText}>Cadastrar Spot</Text>
+								)}
+							</Pressable>
+						</ScrollView>
+					</View>
+				</View>
+			</Modal>
+		</View>
+	);
 }
 
 const styles = StyleSheet.create({
-  titleContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  stepContainer: {
-    gap: 8,
-    marginBottom: 8,
-  },
-  reactLogo: {
-    height: 178,
-    width: 290,
-    bottom: 0,
-    left: 0,
-    position: 'absolute',
-  },
+	container: {
+		flex: 1,
+		alignItems: "center",
+		justifyContent: "center",
+		padding: 40,
+	},
+	title: {
+		fontSize: 24,
+		fontWeight: "bold",
+		color: "white",
+		marginBottom: 24,
+	},
+	text: {
+		fontSize: 14,
+		color: "white",
+		marginBottom: 24,
+		textAlign: "center",
+		paddingHorizontal: 20,
+	},
+	stepContainer: {
+		gap: 8,
+		marginBottom: 8,
+	},
+	reactLogo: {
+		height: 178,
+		width: 290,
+		bottom: 0,
+		left: 0,
+		position: "absolute",
+	},
+	addButton: {
+		marginTop: 24,
+		width: "100%",
+		backgroundColor: "#eab308",
+		paddingHorizontal: 16,
+		paddingVertical: 8,
+		borderRadius: 6,
+		justifyContent: "center",
+		alignItems: "center",
+		height: 40,
+	},
+	centeredView: {
+		flex: 1,
+		justifyContent: "center",
+		alignItems: "center",
+		width: "100%",
+	},
+	modalView: {
+		width: "100%",
+		backgroundColor: "#18181b",
+		padding: 0,
+		flex: 1,
+	},
+	modalHeader: {
+		flexDirection: "row",
+		justifyContent: "space-between",
+		alignItems: "center",
+		padding: 16,
+		borderBottomWidth: 1,
+		borderBottomColor: "#27272a",
+	},
+	modalTitle: {
+		fontSize: 18,
+		fontWeight: "bold",
+		color: "white",
+	},
+	formContainer: {
+		padding: 16,
+	},
+	inputContainer: {
+		marginBottom: 16,
+	},
+	label: {
+		color: "white",
+		marginBottom: 8,
+		fontSize: 14,
+	},
+	input: {
+		backgroundColor: "#27272a",
+		borderRadius: 6,
+		padding: 12,
+		color: "white",
+		fontSize: 14,
+	},
+	textArea: {
+		height: 100,
+		textAlignVertical: "top",
+	},
+	submitButton: {
+		marginTop: 8,
+		marginBottom: 16,
+	},
+	buttonText: {
+		color: "#000",
+		fontSize: 16,
+		fontWeight: "500",
+	},
 });
