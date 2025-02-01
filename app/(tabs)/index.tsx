@@ -8,12 +8,14 @@ import {
 	TextInput,
 	ActivityIndicator,
 	SafeAreaView,
+	Alert,
 } from "react-native";
 import LottieView from "lottie-react-native";
 import { useRouter } from "expo-router";
 import FontAwesome from "@expo/vector-icons/FontAwesome";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { SafeAreaProvider } from "react-native-safe-area-context";
+import Toast from "react-native-toast-message";
 
 export default function HomeScreen() {
 	const router = useRouter();
@@ -32,6 +34,56 @@ export default function HomeScreen() {
 	async function handleLogout() {
 		router.replace("/");
 	}
+
+	const formatCEPWithDash = (cep: string) => {
+		return cep.replace(/(\d{5})(\d{3})/, "$1-$2");
+	};
+
+	const removeDash = (cep: string) => {
+		return cep.replace(/(\d{5})(\d{3})/, "$1$2");
+	};
+
+	const fetchCEP = async () => {
+		fetch(`https://viacep.com.br/ws/${removeDash(zipCode)}/json/`)
+			.then((response) => response.json())
+			.then((data) => {
+				setAddress(data.logradouro);
+				setNeighborhood(data.bairro);
+				setCity(data.localidade);
+				setState(data.uf);
+			})
+			.catch((error) => console.log(error));
+	};
+
+	const saveSpot = async () => {
+		if (spotName === "" || description === "" || address === "") {
+			Toast.show({
+				type: "error",
+				text1: "Erro no cadastro",
+				text2: "Preencha todos os campos",
+			});
+			return;
+		}
+	};
+
+	// biome-ignore lint/correctness/useExhaustiveDependencies: <explanation>
+	useEffect(() => {
+		if (zipCode.length === 8) {
+			setZipCode(formatCEPWithDash(zipCode));
+			fetchCEP();
+		}
+	}, [zipCode]);
+
+	// biome-ignore lint/correctness/useExhaustiveDependencies: <explanation>
+	useEffect(() => {
+		setSpotName("");
+		setDescription("");
+		setAddress("");
+		setNeighborhood("");
+		setCity("");
+		setState("");
+		setZipCode("");
+	}, [modalVisible]);
 
 	return (
 		<View style={styles.container}>
@@ -106,9 +158,10 @@ export default function HomeScreen() {
 							<View style={styles.inputContainer}>
 								<Text style={styles.label}>Endereço</Text>
 								<TextInput
+									editable={false}
+									cursorColor="#fff"
 									style={styles.input}
 									value={address}
-									onChangeText={setAddress}
 									placeholder="Rua, número"
 									placeholderTextColor="#666"
 								/>
@@ -117,9 +170,9 @@ export default function HomeScreen() {
 							<View style={styles.inputContainer}>
 								<Text style={styles.label}>Bairro</Text>
 								<TextInput
+									editable={false}
 									style={styles.input}
 									value={neighborhood}
-									onChangeText={setNeighborhood}
 									placeholder="Bairro"
 									placeholderTextColor="#666"
 								/>
@@ -128,9 +181,9 @@ export default function HomeScreen() {
 							<View style={styles.inputContainer}>
 								<Text style={styles.label}>Cidade</Text>
 								<TextInput
+									editable={false}
 									style={styles.input}
 									value={city}
-									onChangeText={setCity}
 									placeholder="Cidade"
 									placeholderTextColor="#666"
 								/>
@@ -139,9 +192,9 @@ export default function HomeScreen() {
 							<View style={styles.inputContainer}>
 								<Text style={styles.label}>Estado</Text>
 								<TextInput
+									editable={false}
 									style={styles.input}
 									value={state}
-									onChangeText={setState}
 									placeholder="Estado"
 									placeholderTextColor="#666"
 								/>
@@ -149,7 +202,7 @@ export default function HomeScreen() {
 
 							<Pressable
 								style={[styles.addButton, styles.submitButton]}
-								onPress={() => {}}
+								onPress={saveSpot}
 								disabled={status === "loading"}
 							>
 								{status === "loading" ? (

@@ -43,41 +43,41 @@ export default function RootLayout() {
 				</Stack>
 			</ThemeProvider>
 			<StatusBar style={colorScheme === "dark" ? "light" : "dark"} />
-			<Toast 
+			<Toast
 				config={{
 					success: (props) => (
 						<BaseToast
 							{...props}
-							style={{ 
-								borderLeftColor: '#28a745',
-								backgroundColor: colorScheme === 'dark' ? '#1a1a1a' : '#fff'
+							style={{
+								borderLeftColor: "#28a745",
+								backgroundColor: colorScheme === "dark" ? "#1a1a1a" : "#fff",
 							}}
-							contentContainerStyle={{ 
-								backgroundColor: colorScheme === 'dark' ? '#1a1a1a' : '#fff'
+							contentContainerStyle={{
+								backgroundColor: colorScheme === "dark" ? "#1a1a1a" : "#fff",
 							}}
 							text1Style={{
-								color: colorScheme === 'dark' ? '#fff' : '#000'
+								color: colorScheme === "dark" ? "#fff" : "#000",
 							}}
 							text2Style={{
-								color: colorScheme === 'dark' ? '#d1d1d1' : '#666'
+								color: colorScheme === "dark" ? "#d1d1d1" : "#666",
 							}}
 						/>
 					),
 					error: (props) => (
 						<ErrorToast
 							{...props}
-							style={{ 
-								borderLeftColor: '#dc3545',
-								backgroundColor: colorScheme === 'dark' ? '#1a1a1a' : '#fff'
+							style={{
+								borderLeftColor: "#dc3545",
+								backgroundColor: colorScheme === "dark" ? "#1a1a1a" : "#fff",
 							}}
-							contentContainerStyle={{ 
-								backgroundColor: colorScheme === 'dark' ? '#1a1a1a' : '#fff'
+							contentContainerStyle={{
+								backgroundColor: colorScheme === "dark" ? "#1a1a1a" : "#fff",
 							}}
 							text1Style={{
-								color: colorScheme === 'dark' ? '#fff' : '#000'
+								color: colorScheme === "dark" ? "#fff" : "#000",
 							}}
 							text2Style={{
-								color: colorScheme === 'dark' ? '#d1d1d1' : '#666'
+								color: colorScheme === "dark" ? "#d1d1d1" : "#666",
 							}}
 						/>
 					),
