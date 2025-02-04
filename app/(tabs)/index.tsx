@@ -12,12 +12,39 @@ import {
 } from "react-native";
 import LottieView from "lottie-react-native";
 import { useRouter } from "expo-router";
+import { useFocusEffect } from "@react-navigation/native";
 import FontAwesome from "@expo/vector-icons/FontAwesome";
-import { useEffect, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import Toast from "react-native-toast-message";
+import {
+	collection,
+	addDoc,
+	doc,
+	getDocs,
+	query,
+	updateDoc,
+} from "firebase/firestore";
+import { db } from "@/firebaseConfig";
+import { MainContext } from "../_layout";
+import React from "react";
+
+export interface Spot {
+	id: string;
+	spotName: string;
+	description: string;
+	address: string;
+	neighborhood: string;
+	city: string;
+	state: string;
+	zipCode: string;
+	createdAt: string;
+}
 
 export default function HomeScreen() {
+	const { isFetchingSpots, setFetchingSpots, tempSpots, setTempSpots } =
+		useContext(MainContext);
+	const [spots, setSpots] = useState<Spot[]>([]);
 	const router = useRouter();
 	const [modalVisible, setModalVisible] = useState(false);
 	const [spotName, setSpotName] = useState("");
@@ -31,9 +58,15 @@ export default function HomeScreen() {
 		"idle" | "loading" | "success" | "error"
 	>("idle");
 
-	async function handleLogout() {
-		router.replace("/");
-	}
+	const clearState = () => {
+		setSpotName("");
+		setDescription("");
+		setAddress("");
+		setNeighborhood("");
+		setCity("");
+		setState("");
+		setZipCode("");
+	};
 
 	const formatCEPWithDash = (cep: string) => {
 		return cep.replace(/(\d{5})(\d{3})/, "$1-$2");
@@ -55,6 +88,69 @@ export default function HomeScreen() {
 			.catch((error) => console.log(error));
 	};
 
+	const fetchSpots = async () => {
+		setFetchingSpots(true);
+		const q = query(collection(db, "spots"));
+		const querySnapshot = await getDocs(q);
+		const newSpots: Spot[] = [];
+		for (const doc of querySnapshot.docs) {
+			newSpots.push({
+				id: doc.id,
+				spotName: doc.data().spotName,
+				description: doc.data().description,
+				address: doc.data().address,
+				neighborhood: doc.data().neighborhood,
+				city: doc.data().city,
+				state: doc.data().state,
+				zipCode: doc.data().zipCode,
+				createdAt: doc.data().createdAt,
+			});
+		}
+		setSpots(newSpots);
+		setFetchingSpots(false);
+	};
+
+	useFocusEffect(
+		// biome-ignore lint/correctness/useExhaustiveDependencies: <explanation>
+		React.useCallback(() => {
+			fetchSpots();
+		}, []),
+	);
+
+	const updateSpot = async () => {
+		if (spotName === "" || description === "" || address === "") {
+			Toast.show({
+				type: "error",
+				text1: "Erro no cadastro",
+				text2: "Preencha todos os campos",
+			});
+			return;
+		}
+		try {
+			setStatus("loading");
+			const spotRef = doc(db, "spots", tempSpots.id);
+			await updateDoc(spotRef, {
+				spotName,
+				description,
+				address,
+				neighborhood,
+				city,
+				state,
+				zipCode,
+			});
+			setStatus("idle");
+			Toast.show({
+				type: "success",
+				text1: "Sucesso",
+				text2: "Atualizado spot!",
+			});
+			setModalVisible(false);
+			clearState();
+			fetchSpots();
+			setTempSpots({} as Spot);
+		} catch (error) {}
+	};
+
 	const saveSpot = async () => {
 		if (spotName === "" || description === "" || address === "") {
 			Toast.show({
@@ -63,6 +159,35 @@ export default function HomeScreen() {
 				text2: "Preencha todos os campos",
 			});
 			return;
+		}
+		try {
+			setStatus("loading");
+			await addDoc(collection(db, "spots"), {
+				spotName,
+				description,
+				address,
+				neighborhood,
+				city,
+				state,
+				zipCode,
+				createdAt: new Date().toISOString(),
+			});
+			setStatus("idle");
+			Toast.show({
+				type: "success",
+				text1: "Sucesso",
+				text2: "Carregando novo spot!",
+			});
+			setModalVisible(false);
+			clearState();
+			setFetchingSpots(true);
+		} catch (error) {
+			setStatus("error");
+			Toast.show({
+				type: "error",
+				text1: "Erro no cadastro",
+				text2: "Erro ao cadastrar spot",
+			});
 		}
 	};
 
@@ -76,28 +201,72 @@ export default function HomeScreen() {
 
 	// biome-ignore lint/correctness/useExhaustiveDependencies: <explanation>
 	useEffect(() => {
-		setSpotName("");
-		setDescription("");
-		setAddress("");
-		setNeighborhood("");
-		setCity("");
-		setState("");
-		setZipCode("");
+		if (!modalVisible) {
+			clearState();
+		}
 	}, [modalVisible]);
+
+	useEffect(() => {
+		if (tempSpots?.spotName) {
+			setSpotName(tempSpots.spotName);
+			setDescription(tempSpots.description);
+			setAddress(tempSpots.address);
+			setNeighborhood(tempSpots.neighborhood);
+			setCity(tempSpots.city);
+			setState(tempSpots.state);
+			setZipCode(tempSpots.zipCode);
+			setModalVisible(true);
+		}
+	}, [tempSpots]);
 
 	return (
 		<View style={styles.container}>
 			<Text style={styles.title}>Seja bem-vindo(a)!</Text>
-			<Text style={styles.text}>
-				Você ainda não possui spots cadastrados. Aperte no botão abaixo para
-				cadastrar.
-			</Text>
-			<LottieView
-				style={{ width: 300, height: 300 }}
-				source={require("../../assets/skate.json")}
-				autoPlay
-				loop
-			/>
+			{spots && spots.length > 0
+				? spots.map((spot) => (
+						<View style={styles.spotsContainer} key={spot.id}>
+							<Text style={styles.titleSpot}>
+								{spot.spotName ? spot.spotName.toUpperCase() : ""}
+							</Text>
+							<Text style={styles.textSpot}>{spot.description || ""}</Text>
+							<View>
+								<Text style={styles.textSpot}>{spot.address || ""}</Text>
+								<Text style={styles.textSpot}>{spot.neighborhood || ""}</Text>
+								<Text style={styles.textSpot}>
+									{spot.city || ""} - {spot.state || ""}
+								</Text>
+							</View>
+							<View style={styles.buttonsContainer}>
+								<Pressable>
+									<Text style={styles.textRemove}>Remover</Text>
+								</Pressable>
+								<Pressable onPress={() => setTempSpots(spot)}>
+									<Text style={styles.textEdit}>Editar</Text>
+								</Pressable>
+							</View>
+						</View>
+					))
+				: !isFetchingSpots &&
+					spots.length === 0 && (
+						<View>
+							<Text style={styles.text}>
+								Você ainda não possui spots cadastrados. Aperte no botão abaixo
+								para cadastrar.
+							</Text>
+							<LottieView
+								style={{ width: 300, height: 300 }}
+								source={require("../../assets/skate.json")}
+								autoPlay
+								loop
+							/>
+						</View>
+					)}
+			{isFetchingSpots && spots.length === 0 && (
+				<View>
+					<ActivityIndicator />
+					<Text style={styles.text}>Carregando...</Text>
+				</View>
+			)}
 			<Pressable style={styles.addButton} onPress={() => setModalVisible(true)}>
 				<Text>Cadastrar spot</Text>
 			</Pressable>
@@ -201,14 +370,24 @@ export default function HomeScreen() {
 							</View>
 
 							<Pressable
-								style={[styles.addButton, styles.submitButton]}
-								onPress={saveSpot}
+								style={
+									status !== "success"
+										? styles.addButton
+										: styles.addButtonSuccess
+								}
+								onPress={tempSpots?.id ? updateSpot : saveSpot}
 								disabled={status === "loading"}
 							>
 								{status === "loading" ? (
 									<ActivityIndicator color="#000" />
+								) : status === "success" ? (
+									<Text style={styles.buttonText}>
+										Spot cadastrado com sucesso!
+									</Text>
 								) : (
-									<Text style={styles.buttonText}>Cadastrar Spot</Text>
+									<Text style={styles.buttonText}>
+										{tempSpots?.id ? "Atualizar Spot" : "Cadastrar Spot"}{" "}
+									</Text>
 								)}
 							</Pressable>
 						</ScrollView>
@@ -220,6 +399,25 @@ export default function HomeScreen() {
 }
 
 const styles = StyleSheet.create({
+	buttonsContainer: {
+		display: "flex",
+		flexDirection: "row",
+		justifyContent: "space-around",
+		alignItems: "center",
+		padding: 10,
+	},
+	textRemove: {
+		fontSize: 14,
+		color: "#dc2626",
+		textAlign: "center",
+		paddingHorizontal: 20,
+	},
+	textEdit: {
+		fontSize: 14,
+		color: "#65a30d",
+		textAlign: "center",
+		paddingHorizontal: 20,
+	},
 	container: {
 		flex: 1,
 		alignItems: "center",
@@ -239,6 +437,18 @@ const styles = StyleSheet.create({
 		textAlign: "center",
 		paddingHorizontal: 20,
 	},
+	textSpot: {
+		fontSize: 14,
+		color: "white",
+		textAlign: "left",
+	},
+	titleSpot: {
+		fontSize: 20,
+		fontWeight: "bold",
+		color: "white",
+		marginBottom: 10,
+		textAlign: "left",
+	},
 	stepContainer: {
 		gap: 8,
 		marginBottom: 8,
@@ -254,6 +464,17 @@ const styles = StyleSheet.create({
 		marginTop: 24,
 		width: "100%",
 		backgroundColor: "#eab308",
+		paddingHorizontal: 16,
+		paddingVertical: 8,
+		borderRadius: 6,
+		justifyContent: "center",
+		alignItems: "center",
+		height: 40,
+	},
+	addButtonSuccess: {
+		marginTop: 24,
+		width: "100%",
+		backgroundColor: "#65a30d",
 		paddingHorizontal: 16,
 		paddingVertical: 8,
 		borderRadius: 6,
@@ -308,13 +529,20 @@ const styles = StyleSheet.create({
 		height: 100,
 		textAlignVertical: "top",
 	},
-	submitButton: {
-		marginTop: 8,
-		marginBottom: 16,
-	},
 	buttonText: {
 		color: "#000",
 		fontSize: 16,
 		fontWeight: "500",
+	},
+	spotsContainer: {
+		width: "100%",
+		marginBottom: 16,
+		backgroundColor: "#27272a",
+		padding: 16,
+		borderRadius: 8,
+		display: "flex",
+		flexDirection: "column",
+		justifyContent: "flex-start",
+		gap: 10,
 	},
 });
