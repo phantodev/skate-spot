@@ -1,3 +1,4 @@
+import Feather from "@expo/vector-icons/Feather";
 import {
 	Pressable,
 	StyleSheet,
@@ -24,10 +25,12 @@ import {
 	getDocs,
 	query,
 	updateDoc,
+	deleteDoc,
 } from "firebase/firestore";
 import { db } from "@/firebaseConfig";
 import { MainContext } from "../_layout";
 import React from "react";
+import { useActionSheet } from "@expo/react-native-action-sheet";
 
 export interface Spot {
 	id: string;
@@ -42,6 +45,7 @@ export interface Spot {
 }
 
 export default function HomeScreen() {
+	const { showActionSheetWithOptions } = useActionSheet();
 	const { isFetchingSpots, setFetchingSpots, tempSpots, setTempSpots } =
 		useContext(MainContext);
 	const [spots, setSpots] = useState<Spot[]>([]);
@@ -76,6 +80,38 @@ export default function HomeScreen() {
 		return cep.replace(/(\d{5})(\d{3})/, "$1$2");
 	};
 
+	const openActionSheet = (id: string) => {
+		const options = ["Delete", "Cancel"];
+		const destructiveButtonIndex = 0;
+		const cancelButtonIndex = 2;
+		const title = "Are you sure you want to delete this spot?";
+		const message = "This action cannot be undone";
+
+		showActionSheetWithOptions(
+			{
+				options,
+				cancelButtonIndex,
+				destructiveButtonIndex,
+				title,
+				message,
+			},
+			(selectedIndex: number) => {
+				switch (selectedIndex) {
+					case 1:
+						// Save
+						break;
+
+					case destructiveButtonIndex:
+						deleteSpot(id);
+						break;
+
+					case cancelButtonIndex:
+					// Canceled
+				}
+			},
+		);
+	};
+
 	const fetchCEP = async () => {
 		fetch(`https://viacep.com.br/ws/${removeDash(zipCode)}/json/`)
 			.then((response) => response.json())
@@ -89,25 +125,35 @@ export default function HomeScreen() {
 	};
 
 	const fetchSpots = async () => {
-		setFetchingSpots(true);
-		const q = query(collection(db, "spots"));
-		const querySnapshot = await getDocs(q);
-		const newSpots: Spot[] = [];
-		for (const doc of querySnapshot.docs) {
-			newSpots.push({
-				id: doc.id,
-				spotName: doc.data().spotName,
-				description: doc.data().description,
-				address: doc.data().address,
-				neighborhood: doc.data().neighborhood,
-				city: doc.data().city,
-				state: doc.data().state,
-				zipCode: doc.data().zipCode,
-				createdAt: doc.data().createdAt,
+		try {
+			setFetchingSpots(true);
+			const q = query(collection(db, "spots"));
+			const querySnapshot = await getDocs(q);
+			const newSpots: Spot[] = [];
+			for (const doc of querySnapshot.docs) {
+				newSpots.push({
+					id: doc.id,
+					spotName: doc.data().spotName,
+					description: doc.data().description,
+					address: doc.data().address,
+					neighborhood: doc.data().neighborhood,
+					city: doc.data().city,
+					state: doc.data().state,
+					zipCode: doc.data().zipCode,
+					createdAt: doc.data().createdAt,
+				});
+			}
+			setSpots(newSpots);
+		} catch (error) {
+			console.error("Error fetching spots:", error);
+			Toast.show({
+				type: "error",
+				text1: "Erro ao carregar spots",
+				text2: "Tente novamente!",
 			});
+		} finally {
+			setFetchingSpots(false);
 		}
-		setSpots(newSpots);
-		setFetchingSpots(false);
 	};
 
 	useFocusEffect(
@@ -151,6 +197,27 @@ export default function HomeScreen() {
 		} catch (error) {}
 	};
 
+	const deleteSpot = async (id: string) => {
+		try {
+			setStatus("loading");
+			const spotRef = doc(db, "spots", id);
+			await deleteDoc(spotRef);
+			setStatus("idle");
+			Toast.show({
+				type: "success",
+				text1: "Sucesso",
+				text2: "Spot removido!",
+			});
+			fetchSpots();
+		} catch (error) {
+			Toast.show({
+				type: "error",
+				text1: "Erro ao deletar spot",
+				text2: "Tente novamente!",
+			});
+		}
+	};
+
 	const saveSpot = async () => {
 		if (spotName === "" || description === "" || address === "") {
 			Toast.show({
@@ -176,13 +243,14 @@ export default function HomeScreen() {
 			Toast.show({
 				type: "success",
 				text1: "Sucesso",
-				text2: "Carregando novo spot!",
+				text2: "Spot cadastrado com sucesso!",
 			});
 			setModalVisible(false);
 			clearState();
-			setFetchingSpots(true);
+			await fetchSpots(); // Aguarda o fetchSpots completar
 		} catch (error) {
 			setStatus("error");
+			console.error("Error saving spot:", error);
 			Toast.show({
 				type: "error",
 				text1: "Erro no cadastro",
@@ -225,9 +293,23 @@ export default function HomeScreen() {
 			{spots && spots.length > 0
 				? spots.map((spot) => (
 						<View style={styles.spotsContainer} key={spot.id}>
-							<Text style={styles.titleSpot}>
-								{spot.spotName ? spot.spotName.toUpperCase() : ""}
-							</Text>
+							<View style={styles.spotHeader}>
+								<Text style={styles.titleSpot}>
+									{spot.spotName ? spot.spotName.toUpperCase() : ""}
+								</Text>
+								<Pressable
+									style={styles.cameraContainer}
+									onPress={() =>
+										router.push({
+											pathname: "/addSpotPhoto/[id]",
+											params: { id: spot.id },
+										})
+									}
+								>
+									<Feather name="camera" size={24} color="white" />
+									<Text style={styles.textSpot}>10</Text>
+								</Pressable>
+							</View>
 							<Text style={styles.textSpot}>{spot.description || ""}</Text>
 							<View>
 								<Text style={styles.textSpot}>{spot.address || ""}</Text>
@@ -237,7 +319,7 @@ export default function HomeScreen() {
 								</Text>
 							</View>
 							<View style={styles.buttonsContainer}>
-								<Pressable>
+								<Pressable onPress={() => openActionSheet(spot.id)}>
 									<Text style={styles.textRemove}>Remover</Text>
 								</Pressable>
 								<Pressable onPress={() => setTempSpots(spot)}>
@@ -399,6 +481,18 @@ export default function HomeScreen() {
 }
 
 const styles = StyleSheet.create({
+	cameraContainer: {
+		display: "flex",
+		flexDirection: "row",
+		gap: 10,
+		alignItems: "center",
+	},
+	spotHeader: {
+		display: "flex",
+		flexDirection: "row",
+		justifyContent: "space-between",
+		alignItems: "center",
+	},
 	buttonsContainer: {
 		display: "flex",
 		flexDirection: "row",
@@ -446,7 +540,6 @@ const styles = StyleSheet.create({
 		fontSize: 20,
 		fontWeight: "bold",
 		color: "white",
-		marginBottom: 10,
 		textAlign: "left",
 	},
 	stepContainer: {
