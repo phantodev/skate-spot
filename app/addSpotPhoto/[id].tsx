@@ -6,7 +6,7 @@ import {
 	StyleSheet,
 	TouchableOpacity,
 } from "react-native";
-import * as S from "../../../assets/styles/global";
+import * as S from "../../assets/styles/global";
 import Feather from "@expo/vector-icons/Feather";
 import { useState, useRef } from "react";
 import { CameraView, type CameraType, useCameraPermissions } from "expo-camera";
@@ -34,10 +34,21 @@ export default function AddSpotPhotoScreen() {
 	}
 
 	async function takePicture() {
-		const photo = await ref.current?.takePictureAsync();
-		if (!photo) return;
-		setUri(photo?.uri);
-		setModalVisible(false);
+		try {
+			if (!ref.current) {
+				console.error("Camera reference is null");
+				return;
+			}
+			const photo = await ref.current.takePictureAsync();
+			if (!photo) {
+				console.error("Failed to take photo");
+				return;
+			}
+			setUri(photo.uri);
+			setModalVisible(false);
+		} catch (error) {
+			console.error("Error taking picture:", error);
+		}
 	}
 
 	function toggleCameraFacing() {
@@ -46,9 +57,6 @@ export default function AddSpotPhotoScreen() {
 
 	return (
 		<S.Container>
-			<S.Header>
-				<S.Title>Lista de fotos do spot</S.Title>
-			</S.Header>
 			<S.Content>
 				<Feather name="camera-off" size={180} color="#eab308" />
 				<S.Text>

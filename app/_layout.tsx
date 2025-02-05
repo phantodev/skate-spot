@@ -63,6 +63,19 @@ export default function RootLayout() {
 							<Stack.Screen name="index" options={{ headerShown: false }} />
 							<Stack.Screen name="forgot" options={{ headerShown: false }} />
 							<Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+							<Stack.Screen 
+								name="addSpotPhoto/[id]" 
+								options={{ 
+									title: "Adicionar Fotos",
+									headerStyle: {
+										backgroundColor: "#18181b",
+									},
+									headerTintColor: "#fff",
+									headerTitleStyle: {
+										fontWeight: "bold",
+									},
+								}} 
+							/>
 							<Stack.Screen name="+not-found" />
 						</Stack>
 					</ThemeProvider>

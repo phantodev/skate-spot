@@ -10,11 +10,12 @@ import { useColorScheme } from "@/hooks/useColorScheme";
 
 export default function TabLayout() {
 	const colorScheme = useColorScheme();
+	const defaultTheme = "light";
 
 	return (
 		<Tabs
 			screenOptions={{
-				tabBarActiveTintColor: Colors[colorScheme ?? "light"].tint,
+				tabBarActiveTintColor: Colors[colorScheme || defaultTheme].tint,
 				tabBarButton: HapticTab,
 				headerShown: false,
 				tabBarBackground: TabBarBackground,
@@ -31,16 +32,6 @@ export default function TabLayout() {
 				name="index"
 				options={{
 					title: "Home",
-					tabBarIcon: ({ color }) => (
-						<IconSymbol size={28} name="house.fill" color={color} />
-					),
-				}}
-			/>
-			<Tabs.Screen
-				name="addSpotPhoto"
-				options={{
-					href: null,
-					title: "Adicionar Foto no Spot",
 					tabBarIcon: ({ color }) => (
 						<IconSymbol size={28} name="house.fill" color={color} />
 					),
