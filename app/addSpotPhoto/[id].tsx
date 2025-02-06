@@ -12,7 +12,7 @@ import {
 } from "react-native";
 import * as S from "../../assets/styles/global";
 import Feather from "@expo/vector-icons/Feather";
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { db } from "../../firebaseConfig";
 import { doc, updateDoc } from "firebase/firestore";
 import { CameraView, type CameraType, useCameraPermissions } from "expo-camera";
@@ -21,6 +21,7 @@ import { useLocalSearchParams } from "expo-router";
 
 export default function AddSpotPhotoScreen() {
 	const { id } = useLocalSearchParams();
+	const spotId = Array.isArray(id) ? id[0] : id;
 	const [modalVisible, setModalVisible] = useState(false);
 	const [facing, setFacing] = useState<CameraType>("back");
 	const [permission, requestPermission] = useCameraPermissions();
@@ -29,13 +30,19 @@ export default function AddSpotPhotoScreen() {
 	const [uploading, setUploading] = useState(false);
 	const [listPhotos, setListPhotos] = useState<string[]>([]);
 
+	useEffect(() => {
+		loadPhotosFromSupabaseStorage();
+	}, []);
+
+	// useEffect(() => {
+	// 	Alert.alert("listPhotos", JSON.stringify(listPhotos));
+	// }, [listPhotos]);
+
 	if (!permission) {
-		// Camera permissions are still loading.
 		return <View />;
 	}
 
 	if (!permission.granted) {
-		// Camera permissions are not granted yet.
 		return (
 			<S.Container>
 				<S.Text>Nós precisamos da permissão de camera</S.Text>
@@ -62,6 +69,43 @@ export default function AddSpotPhotoScreen() {
 		}
 	}
 
+	async function loadPhotosFromSupabaseStorage() {
+		try {
+			// Lista todos os arquivos na pasta do spot específico
+			const { data, error } = await supabase.storage
+				.from("spots")
+				.list(spotId, {
+					limit: 100,
+					offset: 0,
+					sortBy: { column: 'name', order: 'asc' }
+				});
+
+			if (error) {
+				Alert.alert("Erro Supabase", JSON.stringify(error));
+				throw error;
+			}
+
+			// Se houver arquivos, obter as URLs públicas
+			if (data && data.length > 0) {
+				const publicUrls = await Promise.all(
+					data
+						.filter(file => file.name.startsWith('spot-'))
+						.map(async (file) => {
+							const { data: { publicUrl } } = supabase.storage
+								.from("spots")
+								.getPublicUrl(`${spotId}/${file.name}`);
+							return publicUrl;
+						})
+				);
+				
+				setListPhotos(publicUrls);
+			}
+		} catch (error) {
+			console.error("Erro ao carregar fotos:", error);
+			Alert.alert("Erro", "Não foi possível carregar as fotos do spot.");
+		}
+	}
+
 	function toggleCameraFacing() {
 		setFacing((current) => (current === "back" ? "front" : "back"));
 	}
@@ -82,7 +126,7 @@ export default function AddSpotPhotoScreen() {
 				// Fazer upload para o Supabase Storage
 				const { data, error } = await supabase.storage
 					.from("spots")
-					.upload(`${id}/spot-${Date.now()}.jpg`, formData);
+					.upload(`${spotId}/spot-${Date.now()}.jpg`, formData);
 
 				if (error) {
 					throw error;
