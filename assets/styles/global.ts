@@ -45,8 +45,39 @@ export const AddPhotoButton = styled.TouchableOpacity`
     margin-top: 40px;
 `;
 
+export const SavePhotoButton = styled.TouchableOpacity`
+    background-color: #eab308;
+    width: 180px;
+    height: 40px;
+    border-radius: 8px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-top: 40px;
+    position: absolute;
+    bottom: 80px;
+    z-index: 100;
+`;
+
+export const RemovePhotoButton = styled.TouchableOpacity`
+    width: 180px;
+    height: 40px;
+    border-radius: 8px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: absolute;
+    bottom: 20px;
+    z-index: 99;
+`;
+
 export const AddPhotoButtonText = styled.Text`
     font-weight: bold;
+`;
+
+export const RemovePhotoButtonText = styled.Text`
+    font-weight: bold;
+    color: #ffffff;
 `;
 
 export const CentredView = styled.View`
@@ -57,4 +88,14 @@ export const CentredView = styled.View`
     background-color: #18181b;
     width: 100%;
     height: 100%;    
+`;
+
+export const ContainerImage = styled.Image`
+    width: 180px;
+    height: 180px;
+    border-radius: 8px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    overflow: hidden;
 `;

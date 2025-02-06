@@ -103,10 +103,7 @@ export default function SignupScreen() {
 						<Text style={styles.title}>Cadastro</Text>
 						<View style={styles.inputContainer}>
 							<Text style={styles.label}>Nome</Text>
-							<TextInput
-								onChangeText={setName}
-								style={styles.input}
-							/>
+							<TextInput onChangeText={setName} style={styles.input} />
 						</View>
 						<View style={styles.inputContainer}>
 							<Text style={styles.label}>Email</Text>
@@ -126,17 +123,11 @@ export default function SignupScreen() {
 						</View>
 						<View style={styles.inputContainer}>
 							<Text style={styles.label}>Cidade</Text>
-							<TextInput
-								onChangeText={setCity}
-								style={styles.input}
-							/>
+							<TextInput onChangeText={setCity} style={styles.input} />
 						</View>
 						<View style={styles.inputContainer}>
 							<Text style={styles.label}>Estado</Text>
-							<TextInput
-								onChangeText={setState}
-								style={styles.input}
-							/>
+							<TextInput onChangeText={setState} style={styles.input} />
 						</View>
 						<View style={styles.inputContainer}>
 							<Text style={styles.label}>Senha</Text>
@@ -155,7 +146,10 @@ export default function SignupScreen() {
 							/>
 						</View>
 						<Pressable
-							style={[styles.button, errorMessage ? styles.errorButton : styles.defaultButton]}
+							style={[
+								styles.button,
+								errorMessage ? styles.errorButton : styles.defaultButton,
+							]}
 							onPress={handleSignUp}
 						>
 							{status === "loading" ? (
@@ -179,31 +173,31 @@ const styles = StyleSheet.create({
 		paddingTop: 32,
 	},
 	scrollView: {
-		width: '100%',
+		width: "100%",
 	},
 	container: {
 		flex: 1,
-		alignItems: 'center',
-		justifyContent: 'center',
+		alignItems: "center",
+		justifyContent: "center",
 		padding: 40,
 	},
 	title: {
 		fontSize: 30,
-		color: '#eab308',
+		color: "#eab308",
 	},
 	inputContainer: {
-		width: '100%',
+		width: "100%",
 		marginTop: 16,
 	},
 	label: {
 		fontSize: 20,
-		color: 'white',
+		color: "white",
 	},
 	input: {
-		backgroundColor: '#27272a',
-		width: '100%',
+		backgroundColor: "#27272a",
+		width: "100%",
 		borderRadius: 8,
-		color: 'white',
+		color: "white",
 		paddingHorizontal: 16,
 	},
 	button: {
@@ -211,19 +205,19 @@ const styles = StyleSheet.create({
 		paddingHorizontal: 16,
 		paddingVertical: 8,
 		borderRadius: 6,
-		width: '100%',
+		width: "100%",
 		height: 48,
-		justifyContent: 'center',
-		alignItems: 'center',
+		justifyContent: "center",
+		alignItems: "center",
 	},
 	defaultButton: {
-		backgroundColor: '#eab308',
+		backgroundColor: "#eab308",
 	},
 	errorButton: {
-		backgroundColor: '#ef4444',
+		backgroundColor: "#ef4444",
 	},
 	buttonText: {
 		fontSize: 20,
-		color: 'white',
+		color: "white",
 	},
 });
