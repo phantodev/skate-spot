@@ -9,12 +9,13 @@ import {
 	Alert,
 	ActivityIndicator,
 	ScrollView,
+	Pressable,
 } from "react-native";
 import * as S from "../../assets/styles/global";
 import Feather from "@expo/vector-icons/Feather";
 import { useState, useRef, useEffect } from "react";
 import { db } from "../../firebaseConfig";
-import { doc, updateDoc } from "firebase/firestore";
+import { doc, updateDoc, arrayUnion, arrayRemove } from "firebase/firestore";
 import { CameraView, type CameraType, useCameraPermissions } from "expo-camera";
 import { supabase } from "../../supabaseConfig";
 import { useLocalSearchParams } from "expo-router";
@@ -71,13 +72,12 @@ export default function AddSpotPhotoScreen() {
 
 	async function loadPhotosFromSupabaseStorage() {
 		try {
-			// Lista todos os arquivos na pasta do spot específico
+			// Tenta listar o conteúdo da pasta com o ID
 			const { data, error } = await supabase.storage
 				.from("spots")
 				.list(spotId, {
 					limit: 100,
-					offset: 0,
-					sortBy: { column: 'name', order: 'asc' }
+					sortBy: { column: "name", order: "desc" },
 				});
 
 			if (error) {
@@ -85,24 +85,22 @@ export default function AddSpotPhotoScreen() {
 				throw error;
 			}
 
-			// Se houver arquivos, obter as URLs públicas
 			if (data && data.length > 0) {
-				const publicUrls = await Promise.all(
-					data
-						.filter(file => file.name.startsWith('spot-'))
-						.map(async (file) => {
-							const { data: { publicUrl } } = supabase.storage
-								.from("spots")
-								.getPublicUrl(`${spotId}/${file.name}`);
-							return publicUrl;
-						})
-				);
-				
+				const publicUrls = data.map((file) => {
+					const {
+						data: { publicUrl },
+					} = supabase.storage
+						.from("spots")
+						.getPublicUrl(`${spotId}/${file.name}`);
+					return publicUrl;
+				});
+
 				setListPhotos(publicUrls);
+			} else {
+				setListPhotos([]);
 			}
 		} catch (error) {
 			console.error("Erro ao carregar fotos:", error);
-			Alert.alert("Erro", "Não foi possível carregar as fotos do spot.");
 		}
 	}
 
@@ -137,19 +135,38 @@ export default function AddSpotPhotoScreen() {
 					data: { publicUrl },
 				} = supabase.storage.from("spots").getPublicUrl(data.path);
 
+				const spotRef = doc(db, "spots", spotId);
+				await updateDoc(spotRef, {
+					photo: arrayUnion(publicUrl),
+				});
+
 				setModalVisible(false);
 				setUri(null);
 				setUploading(false);
 				setListPhotos((prev) => [...prev, publicUrl]);
 			} catch (error) {
 				console.error("Erro ao fazer upload da imagem:", error);
-				Alert.alert("Erro", "Não foi possível fazer o upload da imagem.");
 				setUploading(false);
 			}
 		}
 	}
 
-	function updateSpotWithPicture() {}
+	async function removePictureFromStorage(id: string) {
+		try {
+			const idPhoto = id.split("/").pop();
+
+			await supabase.storage.from("spots").remove([`${spotId}/${idPhoto}`]);
+
+			const spotRef = doc(db, "spots", spotId);
+			await updateDoc(spotRef, {
+				photo: arrayRemove(id),
+			});
+
+			setListPhotos((prev) => prev.filter((photo) => photo !== id));
+		} catch (error) {
+			console.error("Erro ao remover imagem:", error);
+		}
+	}
 
 	return (
 		<S.Container>
@@ -170,18 +187,33 @@ export default function AddSpotPhotoScreen() {
 					<View style={styles.containerPhoto}>
 						{listPhotos.length > 0 &&
 							listPhotos.map((photo, index) => (
-								<Image
+								<View
 									// biome-ignore lint/suspicious/noArrayIndexKey: <explanation>
 									key={index}
-									resizeMode="cover"
-									source={{ uri: photo }}
-									style={{
-										width: listPhotos.length === 1 ? "100%" : "48%",
-										height: listPhotos.length === 1 ? 300 : 150,
-										borderRadius: 20,
-										marginBottom: 20,
-									}}
-								/>
+									style={[
+										{
+											position: "relative",
+											width: listPhotos.length === 1 ? "100%" : "48%",
+											marginBottom: 20,
+										},
+									]}
+								>
+									<Pressable
+										style={styles.trash}
+										onPress={() => removePictureFromStorage(photo)}
+									>
+										<Feather name="trash-2" size={16} color="white" />
+									</Pressable>
+									<Image
+										resizeMode="cover"
+										source={{ uri: photo }}
+										style={{
+											width: "100%",
+											height: listPhotos.length === 1 ? 300 : 150,
+											borderRadius: 20,
+										}}
+									/>
+								</View>
 							))}
 					</View>
 					<S.AddPhotoButton onPress={() => setModalVisible(true)}>
@@ -236,11 +268,21 @@ export default function AddSpotPhotoScreen() {
 }
 
 const styles = StyleSheet.create({
+	trash: {
+		position: "absolute",
+		top: 10,
+		right: 10,
+		backgroundColor: "#e74c3c",
+		zIndex: 99,
+		padding: 6,
+		borderRadius: 10,
+	},
 	containerPhoto: {
 		flexDirection: "row",
 		flexWrap: "wrap",
 		justifyContent: "space-between",
 		gap: 4,
+		position: "relative",
 	},
 	scrollView: {
 		width: "100%",

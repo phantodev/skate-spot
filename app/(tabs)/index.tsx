@@ -42,6 +42,7 @@ export interface Spot {
 	state: string;
 	zipCode: string;
 	createdAt: string;
+	photo?: string[];
 }
 
 export default function HomeScreen() {
@@ -141,6 +142,7 @@ export default function HomeScreen() {
 					state: doc.data().state,
 					zipCode: doc.data().zipCode,
 					createdAt: doc.data().createdAt,
+					photo: doc.data().photo,
 				});
 			}
 			setSpots(newSpots);
@@ -307,7 +309,7 @@ export default function HomeScreen() {
 									}
 								>
 									<Feather name="camera" size={24} color="white" />
-									<Text style={styles.textSpot}>10</Text>
+									<Text style={styles.textSpot}>{spot.photo?.length || 0}</Text>
 								</Pressable>
 							</View>
 							<Text style={styles.textSpot}>{spot.description || ""}</Text>
