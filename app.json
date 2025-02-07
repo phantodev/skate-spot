@@ -1,7 +1,7 @@
 {
 	"expo": {
 		"name": "skate-spot",
-		"slug": "skate-spot",
+		"slug": "app-skate-2025",
 		"version": "1.0.0",
 		"orientation": "portrait",
 		"icon": "./assets/images/icon.png",
@@ -14,23 +14,32 @@
 		"android": {
 			"adaptiveIcon": {
 				"foregroundImage": "./assets/images/adaptive-icon.png",
-				"backgroundColor": "#ffffff"
-			}
+				"backgroundColor": "#AE00FF"
+			},
+			"permissions": [
+				"android.permission.CAMERA",
+				"android.permission.RECORD_AUDIO"
+			],
+			"package": "br.com.phantodev.appskate"
 		},
 		"web": {
 			"bundler": "metro",
 			"output": "static",
 			"favicon": "./assets/images/favicon.png"
 		},
+		"splash": {
+			"image": "./assets/images/splash.png",
+			"resizeMode": "contain",
+			"backgroundColor": "#AE00FF"
+		},
 		"plugins": [
 			"expo-router",
 			[
 				"expo-splash-screen",
 				{
-					"image": "./assets/images/splash-icon.png",
-					"imageWidth": 200,
+					"image": "./assets/images/splash.png",
 					"resizeMode": "contain",
-					"backgroundColor": "#ffffff"
+					"backgroundColor": "#AE00FF"
 				}
 			],
 			[
@@ -44,6 +53,12 @@
 		],
 		"experiments": {
 			"typedRoutes": true
-		}
+		},
+		"extra": {
+			"eas": {
+				"projectId": "509722f7-b00f-48b2-bbb9-45b0f9f05959"
+			}
+		},
+		"owner": "kduburko"
 	}
 }
