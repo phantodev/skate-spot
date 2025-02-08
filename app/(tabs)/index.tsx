@@ -28,9 +28,9 @@ import {
 	deleteDoc,
 } from "firebase/firestore";
 import { db } from "@/firebaseConfig";
-import { MainContext } from "../_layout";
 import React from "react";
 import { useActionSheet } from "@expo/react-native-action-sheet";
+import { MainContext } from "../(auth)/_layout";
 
 export interface Spot {
 	id: string;
@@ -519,6 +519,7 @@ const styles = StyleSheet.create({
 		alignItems: "center",
 		justifyContent: "center",
 		padding: 40,
+		backgroundColor: "#151718",
 	},
 	title: {
 		fontSize: 24,

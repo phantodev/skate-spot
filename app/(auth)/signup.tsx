@@ -12,7 +12,7 @@ import {
 } from "react-native";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { createUserWithEmailAndPassword } from "firebase/auth";
-import { auth, db } from "./../firebaseConfig";
+import { auth, db } from "./../../firebaseConfig";
 import type { TStatus } from "@/types/global";
 import Toast from "react-native-toast-message";
 import { doc, setDoc, addDoc, collection } from "firebase/firestore";

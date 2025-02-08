@@ -15,7 +15,7 @@ import {
 	createUserWithEmailAndPassword,
 	sendPasswordResetEmail,
 } from "firebase/auth";
-import { auth, db } from "../firebaseConfig";
+import { auth, db } from "../../firebaseConfig";
 import type { TStatus } from "@/types/global";
 import Toast from "react-native-toast-message";
 import { doc, setDoc, addDoc, collection } from "firebase/firestore";

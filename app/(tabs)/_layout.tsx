@@ -7,10 +7,11 @@ import { IconSymbol } from "@/components/ui/IconSymbol";
 import TabBarBackground from "@/components/ui/TabBarBackground";
 import { Colors } from "@/constants/Colors";
 import { useColorScheme } from "@/hooks/useColorScheme";
+import AntDesign from '@expo/vector-icons/AntDesign';
 
 export default function TabLayout() {
 	const colorScheme = useColorScheme();
-	const defaultTheme = "light";
+	const defaultTheme = "dark";
 
 	return (
 		<Tabs
@@ -23,8 +24,11 @@ export default function TabLayout() {
 					ios: {
 						// Use a transparent background on iOS to show the blur effect
 						position: "absolute",
+						backgroundColor: Colors[colorScheme || defaultTheme].background,
 					},
-					default: {},
+					default: {
+						backgroundColor: Colors[colorScheme || defaultTheme].background,
+					},
 				}),
 			}}
 		>
@@ -43,6 +47,15 @@ export default function TabLayout() {
 					title: "Explore",
 					tabBarIcon: ({ color }) => (
 						<IconSymbol size={28} name="paperplane.fill" color={color} />
+					),
+				}}
+			/>
+			<Tabs.Screen
+				name="my-profile"
+				options={{
+					title: "Profile",
+					tabBarIcon: ({ color }) => (
+						<AntDesign name="user" size={28} color={color} />
 					),
 				}}
 			/>

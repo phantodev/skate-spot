@@ -12,7 +12,7 @@ import "react-native-reanimated";
 
 import { useColorScheme } from "@/hooks/useColorScheme";
 import Toast, { BaseToast, ErrorToast } from "react-native-toast-message";
-import type { Spot } from "./(tabs)";
+import type { Spot } from "../(tabs)";
 import { ActionSheetProvider } from "@expo/react-native-action-sheet";
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
@@ -37,7 +37,7 @@ export default function RootLayout() {
 	const [tempSpots, setTempSpots] = useState({} as Spot);
 	const colorScheme = useColorScheme();
 	const [loaded] = useFonts({
-		SpaceMono: require("../assets/fonts/SpaceMono-Regular.ttf"),
+		SpaceMono: require("../../assets/fonts/SpaceMono-Regular.ttf"),
 	});
 
 	useEffect(() => {
